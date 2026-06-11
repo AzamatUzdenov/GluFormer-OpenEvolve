@@ -1,0 +1,22 @@
+GluFormer × OpenEvolve
+======================
+
+This repository builds on GluFormer, a foundation model for continuous glucose
+monitoring data.
+
+Original work — GluFormer
+-------------------------
+  Authors:  Guy Lutsker, Gal Sapir, Smadar Shilo, Hagai Rossman, Eran Segal, et al.
+  Paper:    A foundation model for continuous glucose monitoring data,
+            Nature (2026). https://doi.org/10.1038/s41586-025-09925-9
+  Source:   https://github.com/Guylu/GluFormer
+  License:  Apache License 2.0
+
+The original GluFormer source code is copyright its respective authors and is
+redistributed here under the Apache License 2.0 (see the LICENSE file).
+
+Modifications
+-------------
+The `gluformer_openevolve/` directory and related changes add an OpenEvolve-based
+search that automatically optimizes a regression head predicting HbA1c from frozen
+GluFormer embeddings. These modifications are by Azamat Uzdenov, 2026.

@@ -1,0 +1,89 @@
+# OpenEvolve config — GluFormer: HbA1c prediction from embeddings + GMI
+
+max_iterations: 20
+random_seed: 42
+
+llm:
+  primary_model: "claude-sonnet-4-6"
+  secondary_model: "claude-sonnet-4-6"
+  api_base: "https://api.anthropic.com/v1/"
+  temperature: 0.8
+  max_tokens: 2048
+
+database:
+  population_size: 30
+  num_islands: 2
+  migration_interval: 5
+  feature_dimensions: ["complexity", "diversity"]
+
+evaluator:
+  timeout: 150
+  enable_artifacts: true
+  cascade_evaluation: false
+
+prompt:
+  num_top_programs: 2
+  num_diverse_programs: 1
+  include_artifacts: true
+
+  system_message: |
+    You are an expert in machine learning and clinical biomarker prediction.
+
+    ## TASK
+    Improve build_features_and_predict() which maps GluFormer CGM embeddings
+    and GMI values to HbA1c predictions.
+
+    ## THREE METRICS (all must improve)
+    1. pearson_r         — mean Pearson r across 10 seeds × 5-fold CV
+                           measures overall prediction accuracy
+    2. spearman_r        — mean Spearman rank correlation
+                           measures robustness to outlier subjects (clinically
+                           important: patient risk ranking must be correct)
+    3. prediction_stability — 1 - std(pearson_r across 10 seeds)
+                           measures consistency across random CV splits;
+                           high variance means the model got lucky on some seeds
+
+    combined_score = pearson_r + 0.3*spearman_r - 0.2*(1 - prediction_stability)
+
+    ## TWO TARGETS IN ONE BLOCK (A + B)
+    A. Feature selection — which inputs to use:
+       - repr: shape (n, 1024) — GluFormer Transformer embeddings
+       - gmi:  shape (n, 1)   — GMI, a strong single clinical predictor of HbA1c
+       Options: repr only, gmi only, or np.hstack([repr, gmi])
+    B. Predictor — model and hyperparameters
+
+    ## FUNCTION SIGNATURE — DO NOT CHANGE
+    def build_features_and_predict(
+        repr_train, gmi_train, y_train,
+        repr_test,  gmi_test
+    ) -> np.ndarray
+
+    ## WHAT YOU MAY CHANGE (inside EVOLVE-BLOCK only)
+    - Feature choice and combination
+    - Scaling: StandardScaler, RobustScaler (fit on train, transform both)
+    - Dimensionality reduction: PCA, TruncatedSVD (fit on train only)
+    - Model: Ridge, ElasticNet, RidgeCV, SVR, GradientBoostingRegressor
+    - Hyperparameters
+    Any sklearn import inside the block is allowed.
+
+    ## KEY FACTS
+    - ~100 subjects, ~80 train / ~20 test per fold
+    - GMI alone is already a strong predictor (pearson ~0.7–0.9)
+    - repr is 1024-dim with only ~80 samples — regularisation is essential
+    - Combining GMI + PCA-reduced repr often beats either alone
+    - y_train is already z-scored — do NOT re-normalise
+
+    ## STRATEGIES
+    1. GMI alone:  X = gmi_train, RidgeCV() — high stability, decent accuracy
+    2. Repr + PCA: PCA(n_components=50), Ridge — reduces dimensionality curse
+    3. Combined:   np.hstack([scaler.fit_transform(repr), gmi]), ElasticNet
+    4. Pipeline:   Pipeline([('scaler', StandardScaler()), ('pca', PCA(100)),
+                              ('model', Ridge(alpha=10))])
+
+    ## HARD CONSTRAINTS
+    - Fit all transforms only on train data; apply (not fit) on test
+    - No use of y_test anywhere (no leakage)
+    - No external data, no file I/O, no network calls
+    - No changes outside EVOLVE-BLOCK markers
+
+    Return ONLY the complete evolved Python file. No markdown fences.
