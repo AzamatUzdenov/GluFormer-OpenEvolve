@@ -36,6 +36,7 @@ conda activate gluformer
 # Install dependencies
 pip install -r requirements.txt
 pip install openevolve
+cd gluformer_openevolve
 
 # Verify baseline
 python evaluator.py initial_program.py
@@ -48,7 +49,7 @@ bash run_evolution.sh
 python compare.py
 ```
 
-## Expected output
+## Historical saved output (not independently confirmed)
 ```
   Combined score     0.5956 → 0.6207  +0.0250
   Pearson r          0.4507 → 0.4631  +0.0124
@@ -56,3 +57,4 @@ python compare.py
   Prediction stability  0.9745 → 0.9773  +0.0029
   Winner: EVOLVED
 ```
+The saved scores need the evaluation corrections and held-out controls documented in [EXPERIMENT_REVIEW.md](../docs/EXPERIMENT_REVIEW.md); reruns after those corrections should not be expected to reproduce these historical values.

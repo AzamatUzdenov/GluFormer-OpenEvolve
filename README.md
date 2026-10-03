@@ -4,6 +4,8 @@ GluFormer is a foundation model for continuous glucose monitoring (CGM). It turn
 
 This repo takes those embeddings and uses [OpenEvolve](https://github.com/codelion/openevolve) (an open-source take on DeepMind's AlphaEvolve) to automatically find a better little model that predicts HbA1c, the blood marker for average glucose over ~3 months. GluFormer itself stays frozen; only the small model on top gets evolved.
 
+**Author contribution:** Azamat Uzdenov developed the OpenEvolve integration and HbA1c-head experiment in `gluformer_openevolve/`. The original GluFormer encoder, upstream training/demo code and paper figures are credited below. This is an exploratory research prototype, not a clinically validated predictor.
+
 ## How it works
 
 OpenEvolve keeps asking an LLM to rewrite one block of code, scores each version with cross-validation, and keeps the best ones. Basically natural selection for code. The only thing that changes is the prediction "head"; data loading and scoring stay fixed.
@@ -19,7 +21,7 @@ Everything lives in `gluformer_openevolve/`:
 
 ## Did it help?
 
-A bit, yes:
+The saved search run reported the following development cross-validation scores:
 
 | Metric | Before | After |
 |--------|--------|-------|
@@ -28,7 +30,9 @@ A bit, yes:
 | Spearman r | 0.5002 | 0.5404 |
 | Stability | 0.9745 | 0.9773 |
 
-The evolved version scales the features and mixes in GMI (a simple glucose proxy the baseline ignored). The biggest win is ranking patients by risk more correctly (Spearman).
+The selected version scales features and mixes in GMI, a glucose-derived feature that the baseline did not use. These are search/selection scores, not a held-out evaluation or evidence of clinical risk ranking.
+
+**Evaluation limits:** the same folds were repeatedly reused during search; adding GMI changes the inputs, so the comparison does not isolate the benefit of OpenEvolve. The historical CV harness standardizes targets within each fold without restoring predictions to their original units before pooling correlations. This needs correction and a fresh evaluation with matched inputs and a held-out test. The reported "stability" is `1 - std(Pearson across seeds)`, not a clinical stability measure. See [review notes](docs/EXPERIMENT_REVIEW.md).
 
 ## Run it
 

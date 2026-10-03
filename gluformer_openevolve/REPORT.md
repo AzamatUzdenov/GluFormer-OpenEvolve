@@ -24,10 +24,16 @@ OpenEvolve evolved the block autonomously using `claude-sonnet-4-6` over 20 iter
 | **Spearman r** | 0.5002 | **0.5404** | +0.0402 |
 | **Prediction stability** | 0.9745 | **0.9773** | +0.0029 |
 
-All four metrics improved. **Winner: EVOLVED.**
+All four saved search-CV metrics increased. The candidate was selected using these same development scores; this is not a held-out test result.
 
 ---
 
-## Did It Help?
+## Interpretation and limitations
 
-Yes. The most meaningful gain is **Spearman r (+0.04)**. The evolved model ranks patients more correctly by HbA1c risk, which matters clinically. Pearson r improved by +0.012 and prediction stability slightly increased, meaning the evolved predictor is both more accurate and more consistent across random CV splits.
+This run demonstrates an implemented OpenEvolve-guided search for a small prediction head on frozen GluFormer representations. The saved Spearman and Pearson scores increased, but they do not establish clinical accuracy, risk stratification or a validated improvement of GluFormer itself.
+
+The search reused the same CV folds; the selected candidate also adds GMI, so the inputs are not matched to the baseline. The historical target scaling is not inverted before predictions from different folds are pooled. Fix this harness and evaluate matched baselines on a test set untouched by model selection before drawing performance conclusions.
+
+The historical run/model provenance is recorded above, as originally saved; the model was not rerun or its runtime independently recovered during this 3 October 2026 review. A saved best-program metadata file is retained. "Prediction stability" means 1 minus the standard deviation of Pearson correlations across seeds, not patient-level or clinical stability.
+
+Author of the OpenEvolve integration/experiment: Azamat Uzdenov. Upstream GluFormer authors and license are retained in the root README and NOTICE.
